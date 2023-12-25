@@ -1,0 +1,734 @@
+<html>
+
+<head>
+    <title>Web AR</title> <!-- Sets the title of the web page to "Web AR" -->
+    <meta charset="utf-8"> <!-- Defines the character encoding for the document as UTF-8 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- Specifies compatibility settings for Internet Explorer -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+
+    <style>
+        .vertical-line {
+            border-style: dashed;
+            border-color: red;
+
+            /* Change the color as needed */
+            height: 70px;
+            /* Adjust the height as needed */
+            margin: 0 20px;
+            margin-left: 85%;
+            margin-top: 6%;
+            position: absolute;
+            /* Adjust the margin as needed */
+        }
+
+        .vertical-line-browser {
+
+            /* Change the color as needed */
+            height: 115px;
+            /* Adjust the height as needed */
+            margin: 0 20px;
+            margin-left: 15%;
+            margin-top: -5%;
+            position: absolute;
+            /* Adjust the margin as needed */
+            border-style: dashed;
+            border-color: green;
+        }
+
+        /* Add CSS for the containers holding the model-viewer elements */
+        .model-viewer-container {
+            display: inline-block;
+            width: 30%;
+            /* Adjust the width as needed */
+            margin: 10px;
+            /* Add spacing between the containers */
+        }
+
+        /* Style the model-viewer elements if necessary */
+        model-viewer {
+            width: 100%;
+            height: 300px;
+            /* Adjust the height as needed */
+        }
+
+
+        .connector {
+            width: 22.5%;
+            /* Full width for the horizontal line */
+            height: 3px;
+            /* Adjust the height of the connector line */
+            background-color: blue;
+            /* Adjust the color as needed */
+            position: absolute;
+            margin-left: 21%;
+            top: 124px;
+            z-index: 1;
+            /* Adjust the top position to separate it from the models */
+        }
+
+        .connector-1 {
+            width: 35.6%;
+            /* Full width for the horizontal line */
+            height: 3px;
+            /* Adjust the height of the connector line */
+            background-color: yellow;
+            /* Adjust the color as needed */
+            position: absolute;
+            margin-left: 46.3%;
+            top: 124px;
+            z-index: 1;
+            /* Adjust the top position to separate it from the models */
+        }
+
+
+        /* CSS for the slanted line container */
+        .slanted-line-container {
+            width: 49%;
+            /* Adjust the width of the line */
+            height: 2px;
+            /* Adjust the height as needed */
+            background: linear-gradient(135deg, transparent 20px, red 20px);
+            transform: rotate(929deg);
+            /* Rotate the line to be vertical */
+            margin: 35px 640px;
+            /* Adjust the margin as needed */
+            margin-bottom: 5%;
+
+        }
+
+        #getData {
+            width: 250px;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #000000;
+        }
+
+        .row1 {
+            display: flex;
+
+        }
+
+
+        @keyframes moveAndSlant {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            25% {
+                transform: translateY(-50px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-450px) translateX(-600px) rotate(0deg);
+            }
+
+            100% {
+                transform: translateY(-450px) translateX(0) rotate(0deg);
+                display: none;
+            }
+
+        }
+
+        #sendFileModel {
+            animation: moveAndSlant 10s ease-in-out forwards 3;
+        }
+
+
+        @keyframes moveLeftAndDownAnimation {
+            0% {
+                transform: translateX(0) translateY(0);
+            }
+
+            50% {
+                transform: translateX(-335%) translateY(0);
+            }
+
+            100% {
+                transform: translateX(-335%) translateY(500%);
+            }
+        }
+
+        #receiveFileModel {
+            animation: moveLeftAndDownAnimation 10s ease-in-out 3;
+            /* Adjust duration and easing as needed */
+        }
+
+        /* Apply basic styles to the button */
+        .transparent-button {
+            background-color: transparent;
+            color: rgb(89, 255, 0);
+            /* Set the text color */
+            border: 2px solid rgb(89, 255, 0);
+            /* Set the border color */
+
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            /* Add a smooth transition effect */
+
+            
+    /* Add a smooth transition effect */
+    animation: rainbow 3s infinite; /* Add rainbow animation */
+        }
+
+        
+@keyframes rainbow {
+    0% {
+        color: red;
+        border-color: red;
+    }
+    16.666% {
+        color: orange;
+        border-color: orange;
+    }
+    33.333% {
+        color: yellow;
+        border-color: yellow;
+    }
+    50% {
+        color: green;
+        border-color: green;
+    }
+    66.666% {
+        color: blue;
+        border-color: blue;
+    }
+    83.333% {
+        color: indigo;
+        border-color: indigo;
+    }
+    100% {
+        color: violet;
+        border-color: violet;
+    }
+}
+
+        /* Change the background color and text color on hover */
+        .transparent-button:hover {
+            background-color: #ffffff;
+            /* Set the background color on hover */
+            color: #000000;
+            /* Set the text color on hover */
+        }
+    </style>
+
+    <script>
+        function allowDrop(even) {
+            even.preventDefault();
+        }
+
+        function drag(even) {
+            even.dataTransfer.setData("text", even.target.id);
+        }
+
+        function drop(even) {
+            even.preventDefault();
+            var fetchData = even.dataTransfer.getData("text");
+            even.target.appendChild(document.getElementById(fetchData));
+
+            var dropArea = document.getElementById(fetchData);
+
+            // Check if the drop area already has child elements
+            if (dropArea.hasChildNodes()) {
+                console.log("Something is not there in the drop area");
+            } else {
+                //dropArea.appendChild(document.getElementById(fetchData));
+                console.log("Something is already in the drop area");
+                startUploadingFile();
+            }
+        }
+    </script>
+
+    <!-- Include the model-viewer JavaScript module -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+</head>
+
+<body>
+    <!-- Inserts a line break (not visible on the page) -->
+    <br>
+    <div>
+        <center>
+            <h1>File Transfer Protocols</h1> <!-- Heading element -->
+
+            <br>
+        </center>
+
+    </div>
+    <hr>
+    <!-- <div class="model-viewer-container">
+
+       
+
+    </div> -->
+    <!-- Container for the first model-viewer -->
+
+    <div class="model-viewer-container">
+        <model-viewer src="laptop (3).glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls
+            poster="poster.webp" shadow-intensity="1" id="FtpClientLaptop">
+            <button class="Hotspot transparent-button" slot="hotspot-3"
+                data-position="10.066504518301514m 69.27750186888898m 718.4284188104473m"
+                data-normal="0m 0.4745439042365091m 0.8802318347753455m" data-visibility-attribute="visible"
+                onclick="alert('IP Address > 192.168.0.3')">
+                <div class="HotspotAnnotation">Windows OS Laptop - FTP Client</div>
+            </button>
+        </model-viewer>
+    </div>
+
+    <div class="vertical-line-browser"></div>
+
+
+    <input type="image" src="browser.png"
+        style="width: 30%;margin-left: -30%;margin-top: 24%;height: 30%;position: absolute ;"
+        onclick="handleBrowserImageClick()" />
+
+    <!-- File Download Link -->
+
+    <a href="#" id="downloadLink" style="display: none;margin-left: -30%;margin-top: 40%;position: absolute ;"
+        class="link-success link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+        onclick="receiveFileAnimate()">Download file</a>
+
+    <!--     onclick="addHelloText()" -->
+
+
+    <div class="connector" style="margin-top: 190px;"></div>
+    <div class="connector-1" style="margin-top: 190px;"></div>
+
+
+
+    <!-- Similar containers for other model-viewer elements -->
+    <div class="model-viewer-container">
+        <model-viewer src="router 2.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls
+            poster="poster.webp" shadow-intensity="1" style="top: -40px;">
+            <button class="Hotspot" style="border-radius: 100%;background-color:rgb(89, 255, 0) ;"
+                onclick="alert('LED Lights - Lights indicate signal power, internet, and port status to keep users informed.')"
+                slot="hotspot-1" data-position="-81.97326310654489m 12.807105263847163m -69.7434421940822m"
+                data-normal="-0.2350872000807512m 0.9719089402442203m -0.011270325263702499m"
+                data-visibility-attribute="visible">
+                <div class="HotspotAnnotation" style="font-size:8px;"><b>1</b></div>
+            </button>
+
+            <button class="Hotspot " style="border-radius: 100%;background-color:rgb(89, 255, 0) ;"
+                onclick="alert('Router IP Address > 10.10.10.1')" slot="hotspot-1"
+                data-position="4.619146713285266m 23.29660417842021m -24.130473665273932m"
+                data-normal="0.0017078448797659893m 0.8294415367891209m -0.5585909239459302m"
+                data-visibility-attribute="visible">
+                <div class="HotspotAnnotation" style="font-size:8px;"><b>2</b></div>
+            </button>
+
+            <button class="Hotspot" style="border-radius: 100%;background-color:rgb(89, 255, 0) ;"
+                onclick="alert('Antennae - Antennae broadcast wireless signals in your home network.')" slot="hotspot-2"
+                data-position="179.0995711956234m 190.63378749244632m -137.70381282278132m"
+                data-normal="0.9429811641888707m -0.25659582201292835m 0.2120026134520792m"
+                data-visibility-attribute="visible">
+                <div class="HotspotAnnotation" style="font-size:8px;"><b>3</b></div>
+            </button>
+
+            <button class="Hotspot" style="border-radius: 100%;background-color:rgb(89, 255, 0) ;"
+                onclick="alert('Reset Port - Port for resetting router to factory defaults.')" slot="hotspot-4"
+                data-position="94.80802277930192m -2.051583201389989m -88.57691547871738m"
+                data-normal="0.9524589367311355m -0.3046669884332552m 7.518845538177253e-8m"
+                data-visibility-attribute="visible">
+                <div class="HotspotAnnotation" style="font-size:8px;"><b>4</b></div>
+            </button>
+
+            <button class="Hotspot" style="border-radius: 100%;background-color:rgb(89, 255, 0) ;"
+                onclick="alert('Power Connection - Power adapter port for router connection.')" slot="hotspot-5"
+                data-position="93.0271975223528m -9.036092963084773m -42.92367625481142m"
+                data-normal="0.9499894452431723m -0.3122820102507609m 5.598494470146217e-7m"
+                data-visibility-attribute="visible">
+                <div class="HotspotAnnotation" style="font-size:8px;"><b>5</b></div>
+            </button>
+
+            <button class="Hotspot" style="border-radius: 100%;background-color:rgb(89, 255, 0) ;"
+                onclick="alert('WAN/Internet Port - Connect modem or transceiver to link home network to internet.')"
+                slot="hotspot-6" data-position="88.57529082339992m -4.5743943571451195m 7.237066857346441m"
+                data-normal="9.466578299075506e-13m 0.9999999999998374m -5.706325905294796e-7m"
+                data-visibility-attribute="visible">
+                <div class="HotspotAnnotation" style="font-size:8px;"><b>6</b></div>
+            </button>
+
+
+            <button class="Hotspot" style="border-radius: 100%;background-color:rgb(89, 255, 0) ;"
+                onclick="alert('LAN Ports - Ports for wired devices on home network without wireless capability.')"
+                slot="hotspot-7" data-position="80.16649959325824m -4.574379532828555m 92.24591956129082m"
+                data-normal="0m 0.9999999999998374m -5.706306373449653e-7m" data-visibility-attribute="visible">
+                <div class="HotspotAnnotation" style="font-size:8px;"><b>7</b></div>
+            </button>
+
+        </model-viewer>
+
+    </div>
+
+    <div class="model-viewer-container">
+        <model-viewer src="server_racking_system.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls
+            poster="poster.webp" shadow-intensity="1" id="FtpServer" style="margin-left: 20%;">
+            <button class="Hotspot transparent-button" slot="hotspot-1"
+                data-position="-0.2986763782425904m 1.905029363515141m 0.5064332606660245m"
+                data-normal="7.450818835722137e-7m -0.18521761207126647m 0.9826975303612311m"
+                data-visibility-attribute="visible" onclick="alert('IP Address > ftp://10.10.10.2')">
+                <div class="HotspotAnnotation">FTP Server</div>
+            </button>
+        </model-viewer>
+    </div>
+
+    <!-- id="sendFileModel"
+    display: none;
+    
+
+div - id="fileName"
+    -->
+
+    <model-viewer src="packet recieve.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls
+        poster="poster.webp" shadow-intensity="1" id="receiveFileModel"
+        style="z-index: 1;width: 20%;height: 10%;margin-left: 72%;margin-top: -190px;position: absolute;display: none;">
+
+        <button class="Hotspot transparent-button"  slot="hotspot-1" 
+        data-position="-0.01807796683813881m -0.13234383238683817m 0.15079345864210933m" 
+        data-normal="0m -2.220446049250313e-16m 1m" data-visibility-attribute="visible"
+        onclick="alert(
+            'Packet Details:\nVersion (4 bits): Indicates the version of the IP protocol (IPv4 or IPv6).\nIHL (4 bits): Internet Header Length, the number of 32-bit words in the header.\nType of Service (8 bits): Specifies the priority and ECN (Explicit Congestion Notification).\nTotal Length (16 bits): Total length of the IP packet (header + data).\nIdentification (16 bits): Used for fragmentation/reassembly of IP datagrams.\nFlags (3 bits): Control fragmentation (e.g., Don`t Fragment, More Fragments).\nFragment Offset (13 bits): Indicates the position of the fragment in the original datagram.\nTime to Live (8 bits): Limits the time the packet is allowed to traverse the network.\nProtocol (8 bits): Specifies the higher-layer protocol (e.g., TCP, UDP).\nHeader Checksum (16 bits): Error-checking for the header.\nSource IP Address (32 bits): IP address of the sender is 10.10.10.2.\nDestination IP Address (32 bits): IP address of the intended recipient is 192.168.0.3.\nOptions (variable): Optional and may include various information such as timestamp, record route, etc.\nData (Payload): Actual data being transmitted.')"
+         
+        >
+            <div class="HotspotAnnotation" style="font-size: smaller;" id="RfileName">File</div>
+        </button>
+
+    </model-viewer>
+
+
+    <!-- Slanted line container -->
+    <div class="slanted-line-container"></div>
+    <div class="vertical-line"></div>
+    <div class="model-viewer-container" style="margin-left:69% ;margin-top: -10%;">
+        <model-viewer src="laptop (3).glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls
+            poster="poster.webp" shadow-intensity="1" id="FileUploaderUser" onclick="changeModel('FileUploaderUser')">
+
+            <button class="Hotspot transparent-button" slot="hotspot-3"
+                data-position="10.066504518301514m 69.27750186888898m 718.4284188104473m"
+                data-normal="0m 0.4745439042365091m 0.8802318347753455m" data-visibility-attribute="visible"
+                onclick="alert('IP Address > 192.168.0.2')">
+                <div class="HotspotAnnotation">Windows OS Laptop - File Uploader User</div>
+            </button>
+        </model-viewer>
+    </div>
+    <!-- Packet Details:\nSource IP Address: 192.168.0.2\nDestination IP Address: 10.10.10.2\nFile Size: '+ formatFileSize(file.size)) -->
+
+    <model-viewer src="packet send.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls poster="poster.webp"
+        shadow-intensity="1"
+        style="width: 20%;height: 10%;margin-left: 75%;margin-top: -15px;display: none; z-index: 1;" id="sendFileModel">
+        <button class="Hotspot transparent-button" slot="hotspot-1" 
+        data-position="-0.01807796683813881m -0.13234383238683817m 0.15079345864210933m"
+         data-normal="0m -2.220446049250313e-16m 1m" data-visibility-attribute="visible"
+         onclick="alert(
+            'Packet Details:\nVersion (4 bits): Indicates the version of the IP protocol (IPv4 or IPv6).\nIHL (4 bits): Internet Header Length, the number of 32-bit words in the header.\nType of Service (8 bits): Specifies the priority and ECN (Explicit Congestion Notification).\nTotal Length (16 bits): Total length of the IP packet (header + data).\nIdentification (16 bits): Used for fragmentation/reassembly of IP datagrams.\nFlags (3 bits): Control fragmentation (e.g., Don`t Fragment, More Fragments).\nFragment Offset (13 bits): Indicates the position of the fragment in the original datagram.\nTime to Live (8 bits): Limits the time the packet is allowed to traverse the network.\nProtocol (8 bits): Specifies the higher-layer protocol (e.g., TCP, UDP).\nHeader Checksum (16 bits): Error-checking for the header.\nSource IP Address (32 bits): IP address of the sender is 192.168.0.2.\nDestination IP Address (32 bits): IP address of the intended recipient is 10.10.10.2.\nOptions (variable): Optional and may include various information such as timestamp, record route, etc.\nData (Payload): Actual data being transmitted.')"
+         >
+              <div class="HotspotAnnotation" id="fileName" style="font-size: smaller;">File</div>
+        </button>
+
+    </model-viewer>
+
+
+
+    <div class="model-viewer-container">
+
+
+        <input type="image" src="filezilla-logo.jpg" onclick="addHelloText()"
+            style="width: 50%;margin-left: 250%;margin-top: -100px;" />
+
+    </div>
+    <br>
+
+    <div style="display: flex;">
+        <div class="model-viewer-container" id="additionalContent" style="display:none; 
+            width: 40%;margin: 10px;">
+
+            <img src="filezilla.jpg" id="FilezillaUiModel" width="100%" height="100%" style="cursor: pointer;">
+
+
+
+        </div>
+
+
+        <!-- File Upload Button -->
+        <input type="file" id="fileInput" style="display: none;">
+        <button id="additionalContent1" style="display:none;height:50%;" onclick="uploadFile()"
+            class="btn btn-outline-danger btn-sm"><b>SELECT FILE</b></button>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <h6 id="additionalContent2" style="display: none;">Drag Your Local File inside FileZilla server:</h6>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <div id="additionalContent3" style="display: none;">
+            <div id="getData" ondrop="drop(event)" ondragover="allowDrop(event)">
+            </div>
+
+            <img id="dragData" draggable="true" ondragstart="drag(event)" width="180" height="180">
+        </div>
+
+
+
+    </div>
+
+    </div>
+
+
+
+    <script>
+        // Use setTimeout to display an alert after 5 seconds
+        setTimeout(function () {
+            alert("Let's Start Transferring File using FTP(File Tranfer Protocol) in AR World!! Click on FileZilla FTP Application. To Know IP Adresses of Network Devices click on their names.");
+        }, 3000); // 3000 milliseconds (3 seconds)
+
+
+        function handleBrowserImageClick() {
+
+            // Add click event listeners to each model
+            const userInput = prompt("Enter FTP Server IP Address connect to server:");
+            if (userInput !== null && userInput == 'ftp://10.10.10.2') {
+
+                console.log(userInput);
+                alert("You are connected to FTP Server: " + userInput);
+
+                if (file) {
+                    console.log(file.name);
+                    console.log(file.size);
+                    // Show the download link and set its href attribute
+                    // Display file name and size in the link text
+
+                    // After file upload is initiated, make the model viewer visible
+                    var modelViewer = document.getElementById('receiveFileModel');
+                    modelViewer.style.display = 'block';
+
+                    // Update the content of the div with the file name
+                    var fileNameElement = document.getElementById('RfileName');
+                    fileNameElement.innerHTML = file.name +' '+ formatFileSize(file.size);
+
+                    // Start the animation on the #receiveFileModel element
+                    var receiveFileModelElement = document.getElementById('receiveFileModel');
+                    receiveFileModelElement.classList.add('moveLeftAndDownAnimation');
+
+
+                    // Set a timeout to display the download link and text after 30 seconds
+                    setTimeout(function () {
+                        displayDownloadLink();
+                    }, 30000);
+
+                    // Add an event listener for the animation end
+                    receiveFileModelElement.addEventListener('animationend', function () {
+                        // Display the download link and text after the animation is completed
+                        displayDownloadLink();
+                    });
+
+
+
+
+
+
+                } else {
+                    console.log("no file");
+                    alert("There is no file uploaded on FTP Server yet.")
+                }
+
+            } else {
+                alert("Invalid IP Address: " + userInput + " (Enter to connect: ftp://10.10.10.2)");
+                anotherFunction();
+
+            }
+
+        }
+
+        function displayDownloadLink() {
+            downloadLink.textContent = `Download File ${file.name} (${formatFileSize(file.size)})`;
+
+            downloadLink.style.display = 'inline';
+        }
+
+        function formatFileSize(bytes) {
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            if (bytes == 0) return '0 Byte';
+            const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+            return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+        }
+
+
+
+
+        // Function to set the visibility of hotspots
+        function setHotspotVisibility(visibility) {
+            const hotspots = document.querySelectorAll('.Hotspot');
+            hotspots.forEach(hotspot => {
+                hotspot.setAttribute('data-visibility-attribute', visibility ? 'visible' : 'hidden');
+            });
+        }
+
+        // Use a variable to track whether "Hello" has been displayed
+        var helloDisplayed = false;
+        function addHelloText() {
+
+            if (!helloDisplayed) {
+                document.getElementById('additionalContent').style.display = 'inline-block';
+
+                // Update the variable to indicate that "Hello" has been displayed
+                helloDisplayed = true;
+                alert("In the future, scroll down and click on the FileZilla Application UI model which says that FileZilla is a free and open-source, cross-platform FTP application.");
+
+            }
+        }
+
+        // Use a variable to track whether "Hello" has been displayed
+        var OptionsDisplayed = false;
+
+
+
+        function uploadFile() {
+            // Trigger the file input click
+            document.getElementById('fileInput').click();
+        }
+
+        function downloadFile() {
+            // For demonstration purposes, create a dummy text file and initiate download
+            var text = "This is a sample text file content.";
+            var blob = new Blob([text], { type: 'text/plain' });
+
+            var a = document.createElement('a');
+            a.href = window.URL.createObjectURL(blob);
+            a.download = 'sample.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        var downloadLink;
+
+        var file;
+        // Event listener for file input change
+        document.getElementById('fileInput').addEventListener('change', function (event) {
+            file = event.target.files[0];
+            console.log('File selected:', file.name);
+
+            // Update the content of the div with the file name
+            var fileNameElement = document.getElementById('fileName');
+            fileNameElement.innerHTML = file.name +' '+ formatFileSize(file.size);
+
+            // Update the image source to the selected file
+            var imgElement = document.getElementById('dragData');
+            imgElement.src = window.URL.createObjectURL(file);
+
+
+            // Show the download link and set its href attribute
+            downloadLink = document.getElementById('downloadLink');
+            //downloadLink.style.display = 'inline';
+            downloadLink.href = window.URL.createObjectURL(file);
+
+            downloadLink.download = file.name;
+
+
+
+
+        });
+
+
+
+        // Event listener for file input change
+        //  document.getElementById('fileInput').addEventListener('change', handleFileSelection);
+
+        const FilezillaUiModel = document.getElementById("FilezillaUiModel");
+
+        // Add click event listeners to each model
+        FilezillaUiModel.addEventListener("click", () => {
+            const userInput = prompt("Enter Server IP Address connect to FTP server:");
+            if (userInput !== null && userInput == 'ftp://10.10.10.2') {
+
+                console.log(userInput)
+
+                alert("You are connected to FTP Server: " + userInput);
+
+                document.getElementById('additionalContent1').style.display = 'inline-block';
+                document.getElementById('additionalContent2').style.display = 'inline-block';
+                document.getElementById('additionalContent3').style.display = 'inline-block';
+
+
+                // Update the variable to indicate that "Hello" has been displayed
+                //OptionsDisplayed = true;
+
+            } else {
+
+                alert("Invalid IP Address: " + userInput + " (Enter to connect: ftp://10.10.10.2)");
+
+                anotherFunction();
+            }
+        });
+
+        function anotherFunction() {
+            // Your code for handling the case when the input doesn't match
+            console.log("Input doesn't match. Calling another function.");
+
+            // Add click event listeners to each model
+            const userInput = prompt("Enter Server IP Address connect to server:");
+            if (userInput !== null && userInput == 'ftp://10.10.10.2') {
+
+                console.log(userInput);
+                alert("You are connected to FTP Server: " + userInput);
+
+                document.getElementById('additionalContent1').style.display = 'inline-block';
+                document.getElementById('additionalContent2').style.display = 'inline-block';
+                document.getElementById('additionalContent3').style.display = 'inline-block';
+
+
+            } else {
+                alert("Invalid IP Address: " + userInput + " (Enter to connect: ftp://10.10.10.2)");
+                anotherFunction();
+            }
+
+        }
+
+
+        function startUploadingFile() {
+            // Assuming your file upload logic goes here
+
+            // After file upload is initiated, make the model viewer visible
+            var modelViewer = document.getElementById('sendFileModel');
+            modelViewer.style.display = 'block';
+        }
+
+        function startDownloadingFile() {
+            // Assuming your file upload logic goes here
+
+
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var sendFileModelElement = document.getElementById('sendFileModel');
+
+            sendFileModelElement.addEventListener('animationend', function () {
+                // This will be triggered after the animation completes (after 4 seconds in this case)
+                alert('File Uploaded Successfully!');
+            });
+        });
+
+
+        const receiveFileModel = document.getElementById('receiveFileModel');
+
+        // Add an event listener to detect when the animation ends
+        receiveFileModel.addEventListener('animationend', () => {
+            // Animation is completed, show alert and make the model viewer invisible
+            alert('File Received Sucessfully With Link To Download!');
+            receiveFileModel.style.display = 'none';
+        });
+
+        
+        
+
+
+
+
+    </script>
+    <!-- Includes a JavaScript module for 3D model viewing -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+
+</body>
+
+</html>
